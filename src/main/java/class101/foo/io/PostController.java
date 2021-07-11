@@ -3,12 +3,17 @@ package class101.foo.io;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 public class PostController {
+
+    private Integer PAGE_SIZE = 20;
 
     @Autowired
     PostRepository postRepository;
@@ -18,6 +23,9 @@ public class PostController {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Autowired
+    PostCacheService postCacheService;
 
     // 1. 글을 작성한다.
     @PostMapping("/post")
@@ -31,14 +39,17 @@ public class PostController {
 
     // 2-1. 글 목록을 조회한다.
     @GetMapping("/posts")
-    public List<Post> getPostList() {
-        return postRepository.findAll();
+    public Page<Post> getPostList(@RequestParam(defaultValue = "1") Integer page) {
+
+        if(page.equals(1)){
+            return postCacheService.getFirstPostPage();
+        }else{
+            return postRepository.findAll(
+                    PageRequest.of(page -1, PAGE_SIZE, Sort.by("id").descending())
+            );
+        }
+
     }
     
-    // 2-2 글 목록을 페이징하여 반환
-    
-    // 3. 글 번호로 조회
-    
-    // 4. 글 내용으로 검색 -> 해당 내용이 포함된 모든 글
 
 }
